@@ -20,7 +20,7 @@ export async function seed(db: Db, now = new Date()): Promise<void> {
 
   await db.transaction(async (tx) => {
     await tx.execute(
-      sql`TRUNCATE payments, approval_steps, approvals, approval_policies, invoices, vendors, users, audit_events RESTART IDENTITY CASCADE`,
+      sql`TRUNCATE payments, approval_steps, approvals, chat_threads, approval_policies, invoices, vendors, users, audit_events RESTART IDENTITY CASCADE`,
     );
 
     await tx.insert(users).values([...DEMO_USERS]);

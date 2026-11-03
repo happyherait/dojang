@@ -11,7 +11,7 @@
 | 주차 | 범위 | 상태 |
 |---|---|---|
 | 1 | 모노레포, DB, 인증, 전결 규정 엔진, 가상 ERP MCP 서버 | 완료 |
-| 2 | 에이전트, 스트리밍 채팅, 결재 정지/재개 | 예정 |
+| 2 | 에이전트, 스트리밍 채팅, 결재 정지/재개 | 완료 |
 | 3 | 채팅 UI, 결재 카드, 역할 전환, 감사 타임라인 | 예정 |
 | 4 | PDF 공격 데모, 평가, 추적, 데모 영상 | 예정 |
 
@@ -19,7 +19,7 @@
 
 ```text
 apps/
-  api/        인증 API (Fastify)
+  api/        인증, LangGraph.js 에이전트, SSE 채팅, 결재 API (Fastify)
   mcp-erp/    가상 ERP MCP 서버
 packages/
   contracts/  공용 스키마
@@ -31,6 +31,8 @@ packages/
 
 지급은 `execute_payment` 하나로만 실행되며, 이 도구는 호출자의 말을 믿지 않습니다.
 
+- **도구 분리:** 모델에는 MCP 서버가 읽기 전용으로 표시한 도구와 `propose_payment`만 제공합니다. 지급은 결재가 끝난 뒤 그래프의 고정 노드가 실행합니다.
+- **계좌 보호:** 모델은 청구서와 금액만 지정합니다. 계좌는 서버가 거래처 원장에서 가져옵니다.
 - **권한 위임:** 도구는 요청한 사용자의 권한으로 실행합니다. 에이전트 전용 만능 권한은 없습니다.
 - **승인 고정:** 승인은 거래처, 청구서, 계좌, 금액의 해시에 묶입니다. 내용이 바뀌면 승인은 무효입니다.
 - **결재선 재계산:** 지급 직전에 현재 규정과 거래처 정보로 결재선을 다시 계산해 실제 승인 기록과 대조합니다.
@@ -53,17 +55,32 @@ packages/
 
 Node.js 22 이상과 Docker가 필요합니다.
 
-```bash
-cp .env.example .env
+PowerShell 기준입니다. Bash에서는 첫 줄을 `cp .env.example .env`로 바꿉니다.
+
+```powershell
+Copy-Item .env.example .env
 npm install
 npm run db:up
 npm run db:migrate
 npm run db:seed
-npm run dev:api
+```
+
+`.env`의 `ANTHROPIC_API_KEY`에 키를 넣고, 터미널 두 개에서 서버를 실행합니다. 키가 없으면 채팅 API만 503을 돌려줍니다.
+
+```powershell
 npm run dev:mcp
+npm run dev:api
 ```
 
 VS Code에서는 실행 및 디버그 패널의 **전체 서버**로 두 서버를 함께 띄울 수 있습니다.
+
+## 결재 시나리오 실행
+
+```powershell
+npm run demo
+```
+
+김사원이 300만 원 지급을 요청하면 에이전트가 멈추고, 박팀장의 승인 뒤 지급을 이어서 실행합니다. 다른 요청은 `npm run demo -- "요청 내용"`으로 보낼 수 있습니다.
 
 ## MCP Inspector로 확인
 

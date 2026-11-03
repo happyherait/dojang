@@ -18,5 +18,8 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.4.0"
+  },
+  "exports": {
+    "./app": "./src/app.ts"
   }
 }
