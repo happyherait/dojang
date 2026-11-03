@@ -30,13 +30,15 @@
     "samples": "tsx scripts/make-samples.ts",
     "start:api": "tsx --env-file=.env apps/api/src/main.ts",
     "record": "tsx --env-file=.env scripts/record-demo.ts",
-    "record:setup": "playwright-core install ffmpeg"
+    "record:setup": "playwright-core install ffmpeg",
+    "site": "tsx scripts/build-site.ts"
   },
   "devDependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
     "@types/node": "^22.20.5",
     "concurrently": "^10.0.6",
     "drizzle-kit": "^0.31.11",
+    "marked": "^18.1.3",
     "pdf-lib": "^1.17.1",
     "playwright-core": "1.63.0",
     "tsx": "^4.23.15",
