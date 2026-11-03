@@ -22,14 +22,19 @@
     "dev:api": "npm run dev -w @dojang/api",
     "dev:mcp": "npm run dev -w @dojang/mcp-erp",
     "demo": "tsx scripts/demo.ts",
-    "dev": "concurrently -n mcp,api,web -c blue,green,magenta \"npm run dev:mcp\" \"npm run dev:api\" \"npm run dev:web\"",
+    "dev": "concurrently -n mcp,api,web -c blue,green,magenta \"npm run start:mcp\" \"npm run dev:api\" \"npm run dev:web\"",
     "dev:web": "npm run dev -w @dojang/web",
-    "build:web": "npm run build -w @dojang/web"
+    "build:web": "npm run build -w @dojang/web",
+    "start:mcp": "tsx --env-file=.env apps/mcp-erp/src/main.ts",
+    "eval": "tsx --env-file=.env evals/run.ts",
+    "samples": "tsx scripts/make-samples.ts"
   },
   "devDependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@types/node": "^22.20.5",
     "concurrently": "^10.0.6",
     "drizzle-kit": "^0.31.11",
+    "pdf-lib": "^1.17.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"

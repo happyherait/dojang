@@ -10,6 +10,7 @@ import {
   login,
   sendMessage,
   type ApprovalDetail,
+  type Attachment,
   type InboxItem,
   type ThreadView,
   type User,
@@ -19,6 +20,14 @@ import { ROLE_LABELS, ROLE_ORDER, STEP_LABELS } from './labels.ts';
 
 const POLL_MS = 2500;
 const EXAMPLE = '가람상사 청구서 A-2026-1101 300만 원 지급해 줘';
+const PDF_EXAMPLE = '첨부한 청구서대로 지급해 줘';
+
+const fileToAttachment = async (file: Blob, name: string): Promise<Attachment> => {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return { name, base64: btoa(binary) };
+};
 
 const won = (amount: number) => `${amount.toLocaleString('ko-KR')}원`;
 
@@ -26,6 +35,8 @@ const describe = (error: unknown) => {
   if (error instanceof ApiError && error.status === 503) {
     return 'Claude API 키가 없어 대화할 수 없습니다. .env에 ANTHROPIC_API_KEY를 넣고 API 서버를 다시 실행하세요.';
   }
+  if (error instanceof ApiError && error.code === 'INVALID_PDF') return 'PDF 파일을 읽지 못했습니다.';
+  if (error instanceof ApiError && error.code === 'FILE_TOO_LARGE') return '5MB 이하의 PDF만 첨부할 수 있습니다.';
   if (error instanceof ApiError && error.status === 403) return '이 결재를 처리할 권한이 없습니다.';
   if (error instanceof ApiError && error.code === 'THREAD_BUSY') {
     return '결재가 끝나면 이어서 입력할 수 있습니다.';
@@ -44,6 +55,7 @@ export function App() {
   const [approvalId, setApprovalId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ApprovalDetail | null>(null);
   const [draft, setDraft] = useState('');
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [streamText, setStreamText] = useState('');
   const [stepText, setStepText] = useState<string | null>(null);
   const [pendingText, setPendingText] = useState<string | null>(null);
@@ -129,10 +141,12 @@ export function App() {
     setSending(true);
     setPendingText(content);
     setStreamText('');
+    const attached = attachment;
+    setAttachment(null);
     try {
       const id = threadId ?? (await createThread(token));
       if (!threadId) setThreadIds((current) => ({ ...current, [userId]: id }));
-      await sendMessage(token, id, content, (update) => {
+      await sendMessage(token, id, content, attached, (update) => {
         if (update.event === 'token') setStreamText((text) => text + update.text);
         else setStepText(STEP_LABELS[update.node] ?? null);
       });
@@ -170,6 +184,21 @@ export function App() {
     setApprovalId(null);
     setDetail(null);
     setError(null);
+  };
+
+  const useSample = async (file: string) => {
+    setError(null);
+    try {
+      const response = await fetch(`/samples/${file}`);
+      setAttachment(await fileToAttachment(await response.blob(), file));
+      setDraft(PDF_EXAMPLE);
+    } catch (cause) {
+      setError(describe(cause));
+    }
+  };
+
+  const pickFile = async (file: File | undefined) => {
+    if (file) setAttachment(await fileToAttachment(file, file.name));
   };
 
   const waiting = thread?.status === 'waiting_approval';
@@ -239,11 +268,18 @@ export function App() {
               <button type="button" className="quiet" onClick={() => setDraft(EXAMPLE)}>
                 {EXAMPLE}
               </button>
+              <button type="button" className="quiet" onClick={() => void useSample('invoice-normal.pdf')}>
+                정상 청구서 PDF로 요청
+              </button>
+              <button type="button" className="quiet" onClick={() => void useSample('invoice-attack.pdf')}>
+                숨은 지시가 든 청구서 PDF로 요청
+              </button>
             </div>
           )}
           {messages.map((message, index) => (
             <p key={index} className={`bubble ${message.role}`}>
               {message.content}
+              {message.attachmentName && <small>첨부: {message.attachmentName}</small>}
             </p>
           ))}
           {pendingText && <p className="bubble user">{pendingText}</p>}
@@ -258,7 +294,29 @@ export function App() {
           </p>
         )}
 
+        {attachment && (
+          <p className="attachment">
+            첨부: {attachment.name}
+            <button type="button" className="quiet" onClick={() => setAttachment(null)}>
+              첨부 취소
+            </button>
+          </p>
+        )}
+
         <form className="composer" onSubmit={(event) => void submit(event)}>
+          <label className="file-button">
+            PDF
+            <input
+              type="file"
+              accept="application/pdf"
+              className="sr-only"
+              disabled={waiting || sending}
+              onChange={(event) => {
+                void pickFile(event.target.files?.[0]);
+                event.target.value = '';
+              }}
+            />
+          </label>
           <label className="sr-only" htmlFor="message">
             메시지
           </label>

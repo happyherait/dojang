@@ -16,5 +16,12 @@ services:
       timeout: 3s
       retries: 10
 
+  jaeger:
+    image: jaegertracing/jaeger:2.5.0
+    profiles: [tracing]
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+
 volumes:
   postgres-data:

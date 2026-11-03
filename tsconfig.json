@@ -17,6 +17,7 @@
   },
   "include": [
     "scripts",
+    "evals",
     "apps/api/src",
     "apps/api/test",
     "apps/mcp-erp/src",

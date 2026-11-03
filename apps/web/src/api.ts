@@ -8,7 +8,7 @@ export interface User {
 export interface ThreadView {
   status: 'idle' | 'waiting_approval' | 'interrupted';
   approvalId: string | null;
-  messages: { role: 'user' | 'assistant'; content: string }[];
+  messages: { role: 'user' | 'assistant'; content: string; attachmentName?: string }[];
 }
 
 export interface InboxItem {
@@ -100,13 +100,22 @@ export const decide = (
   decision: 'approve' | 'reject',
 ) => request(`/approvals/${approvalId}/steps/${stepOrder}/decision`, token, { decision });
 
+export interface Attachment {
+  name: string;
+  base64: string;
+}
+
 export async function sendMessage(
   token: string,
   threadId: string,
   content: string,
+  attachment: Attachment | null,
   onEvent: (event: StreamEvent) => void,
 ): Promise<void> {
-  const response = await request(`/chat/threads/${threadId}/messages`, token, { content });
+  const response = await request(`/chat/threads/${threadId}/messages`, token, {
+    content,
+    ...(attachment ? { attachment } : {}),
+  });
   const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
   if (!reader) throw new ApiError(500, 'NO_STREAM');
 

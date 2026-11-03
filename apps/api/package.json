@@ -16,11 +16,20 @@
     "@langchain/langgraph": "^1.6.0",
     "@langchain/langgraph-checkpoint-postgres": "^1.1.2",
     "@modelcontextprotocol/client": "^2.4.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.300.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.8",
+    "pdfjs-dist": "^6.5.438",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@dojang/mcp-erp": "*"
+  },
+  "exports": {
+    "./app": "./src/app.ts",
+    "./model": "./src/agent/model.ts"
   }
 }

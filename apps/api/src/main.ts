@@ -2,8 +2,10 @@ import { connect } from '@dojang/db';
 import { createClaudeModel } from './agent/model.ts';
 import { buildApp } from './app.ts';
 import { loadConfig } from './config.ts';
+import { startTelemetry } from './telemetry.ts';
 
 const config = loadConfig();
+const stopTelemetry = startTelemetry();
 const { db, close } = connect(config.DATABASE_URL);
 const model = createClaudeModel(config);
 const app = await buildApp(config, db, { model, logger: { level: 'warn' } });
@@ -11,6 +13,7 @@ const app = await buildApp(config, db, { model, logger: { level: 'warn' } });
 const shutdown = async () => {
   await app.close();
   await close();
+  await stopTelemetry();
 };
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
