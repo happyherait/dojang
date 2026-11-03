@@ -12,7 +12,7 @@
     "packages/*"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:up": "docker compose up -d postgres",
@@ -21,10 +21,14 @@
     "db:seed": "npm run seed -w @dojang/db",
     "dev:api": "npm run dev -w @dojang/api",
     "dev:mcp": "npm run dev -w @dojang/mcp-erp",
-    "demo": "tsx scripts/demo.ts"
+    "demo": "tsx scripts/demo.ts",
+    "dev": "concurrently -n mcp,api,web -c blue,green,magenta \"npm run dev:mcp\" \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:web": "npm run dev -w @dojang/web",
+    "build:web": "npm run build -w @dojang/web"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
+    "concurrently": "^10.0.6",
     "drizzle-kit": "^0.31.11",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
