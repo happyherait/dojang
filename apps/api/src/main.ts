@@ -7,7 +7,10 @@ import { startTelemetry } from './telemetry.ts';
 const config = loadConfig();
 const stopTelemetry = startTelemetry();
 const { db, close } = connect(config.DATABASE_URL);
-const model = createClaudeModel(config);
+const model = createClaudeModel(
+  config,
+  config.ANTHROPIC_BASE_URL ? { baseUrl: config.ANTHROPIC_BASE_URL } : {},
+);
 const app = await buildApp(config, db, { model, logger: { level: 'warn' } });
 
 const shutdown = async () => {
