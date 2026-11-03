@@ -75,7 +75,7 @@ npm run db:seed
 npm run dev
 ```
 
-http://localhost:5173 을 엽니다.
+http://localhost:5173 을 엽니다. 안정적인 시연을 위해 `npm run dev`의 서버는 코드 변경을 자동 반영하지 않습니다. 코드를 수정하면 다시 실행하세요.
 
 ## 시연 순서
 
