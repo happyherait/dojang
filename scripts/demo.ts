@@ -44,7 +44,7 @@ async function chat(threadId: string, token: string, content: string): Promise<D
       if (event === 'token') process.stdout.write(data.text);
       if (event === 'step') console.log(`\n  [단계] ${data.node}`);
       if (event === 'done') done = data;
-      if (event === 'error') throw new Error(`에이전트 오류: ${data.error}`);
+      if (event === 'error') throw new Error(`에이전트 오류: ${data.detail ?? data.error}`);
     }
   }
   if (!done) throw new Error('응답이 끝나지 않았습니다.');

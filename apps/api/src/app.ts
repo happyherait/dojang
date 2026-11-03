@@ -8,7 +8,12 @@ import { auditEvents, chatThreads, users, type Db } from '@dojang/db';
 import fastifyJwt from '@fastify/jwt';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { and, eq } from 'drizzle-orm';
-import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
+import Fastify, {
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest,
+  type FastifyServerOptions,
+} from 'fastify';
 import { z } from 'zod';
 import { connectErp } from './agent/erp-client.ts';
 import { createAgentRuntime, type AgentRuntime } from './agent/runtime.ts';
@@ -42,9 +47,9 @@ type AppConfig = Pick<Config, 'JWT_SECRET' | 'DEMO_LOGIN'> &
 export async function buildApp(
   config: AppConfig,
   db: Db,
-  options: { model?: BaseChatModel | undefined } = {},
+  options: { model?: BaseChatModel | undefined; logger?: FastifyServerOptions['logger'] } = {},
 ): Promise<FastifyInstance> {
-  const app = Fastify({ logger: false });
+  const app = Fastify({ logger: options.logger ?? false });
 
   await app.register(fastifyJwt, {
     secret: config.JWT_SECRET,
@@ -188,7 +193,9 @@ export async function buildApp(
       });
     } catch (error) {
       request.log.error(error);
-      send('error', { error: 'AGENT_FAILED' });
+      // 시연 모드에서만 원인을 응답에 담는다. 운영 응답에는 내부 정보를 노출하지 않는다.
+      const detail = error instanceof Error ? error.message.slice(0, 500) : String(error);
+      send('error', { error: 'AGENT_FAILED', ...(config.DEMO_LOGIN ? { detail } : {}) });
     } finally {
       raw.end();
     }
