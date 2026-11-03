@@ -17,6 +17,7 @@ import Fastify, {
 import { z } from 'zod';
 import { connectErp } from './agent/erp-client.ts';
 import { createAgentRuntime, type AgentRuntime } from './agent/runtime.ts';
+import { extractPdfText, InvalidPdfError } from './documents/pdf.ts';
 import { decideStep, getApprovalDetail, listInbox } from './approvals/service.ts';
 import type { Config } from './config.ts';
 
@@ -27,7 +28,13 @@ declare module 'fastify' {
 }
 
 const LoginBodySchema = z.object({ userId: z.string().min(1) });
-const MessageBodySchema = z.object({ content: z.string().trim().min(1).max(4000) });
+const MAX_PDF_BYTES = 5 * 1024 * 1024;
+const MessageBodySchema = z.object({
+  content: z.string().trim().min(1).max(4000),
+  attachment: z
+    .object({ name: z.string().trim().min(1).max(200), base64: z.base64() })
+    .optional(),
+});
 const ThreadParamsSchema = z.object({ threadId: z.uuid() });
 const ApprovalParamsSchema = z.object({ approvalId: z.uuid() });
 const StepParamsSchema = z.object({
@@ -152,7 +159,8 @@ export async function buildApp(
     return agent.getThread(params.data.threadId);
   });
 
-  app.post('/chat/threads/:threadId/messages', async (request, reply) => {
+  // 첨부 파일이 base64로 커지는 만큼 이 경로의 본문 한도만 늘린다.
+  app.post('/chat/threads/:threadId/messages', { bodyLimit: 8 * 1024 * 1024 }, async (request, reply) => {
     const actor = await authenticate(request, reply);
     if (!actor) return reply;
     const params = ThreadParamsSchema.safeParse(request.params);
@@ -170,6 +178,19 @@ export async function buildApp(
     }
     if (current.status !== 'idle') return reply.code(409).send({ error: 'THREAD_BUSY', ...current });
 
+    let document: { name: string; text: string } | undefined;
+    if (body.data.attachment) {
+      const { name, base64 } = body.data.attachment;
+      const bytes = new Uint8Array(Buffer.from(base64, 'base64'));
+      if (bytes.length > MAX_PDF_BYTES) return reply.code(413).send({ error: 'FILE_TOO_LARGE' });
+      try {
+        document = { name, text: await extractPdfText(bytes) };
+      } catch (error) {
+        if (error instanceof InvalidPdfError) return reply.code(400).send({ error: 'INVALID_PDF' });
+        throw error;
+      }
+    }
+
     reply.hijack();
     const raw = reply.raw;
     raw.writeHead(200, {
@@ -183,7 +204,7 @@ export async function buildApp(
     };
 
     try {
-      for await (const event of agent.streamTurn(threadId, actor.id, body.data.content)) {
+      for await (const event of agent.streamTurn(threadId, actor.id, { content: body.data.content, document })) {
         send(event.type, event);
       }
       const thread = await agent.getThread(threadId);
