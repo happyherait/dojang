@@ -6,7 +6,7 @@ import { loadConfig } from './config.ts';
 const config = loadConfig();
 const { db, close } = connect(config.DATABASE_URL);
 const model = createClaudeModel(config);
-const app = await buildApp(config, db, { model });
+const app = await buildApp(config, db, { model, logger: { level: 'warn' } });
 
 const shutdown = async () => {
   await app.close();

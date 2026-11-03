@@ -158,6 +158,29 @@ describe('대화', () => {
     expect((await app.inject({ url: '/approvals/inbox' })).statusCode).toBe(401);
   });
 
+  it('시연 모드에서는 실패 원인을 알려 준다', async () => {
+    const { app } = await startApi([]);
+    const { threadId, headers } = await newThread(app);
+    const { events } = await send(app, threadId, headers, '안녕');
+    expect(events.at(-1)).toMatchObject({
+      event: 'error',
+      data: { error: 'AGENT_FAILED', detail: '스크립트가 끝났습니다.' },
+    });
+  });
+
+  it('운영 모드에서는 실패 원인을 숨긴다', async () => {
+    const app = await buildApp(
+      { JWT_SECRET, DEMO_LOGIN: false, DATABASE_URL: url, MCP_URL: mcpUrl },
+      db,
+      { model: new ScriptedModel([]) },
+    );
+    apps.push(app);
+    const headers = { authorization: `Bearer ${app.jwt.sign({ sub: 'u-kim', name: '김사원', role: 'employee', department: '재무팀' })}` };
+    const { threadId } = (await app.inject({ method: 'POST', url: '/chat/threads', headers })).json();
+    const { events } = await send(app, threadId, headers, '안녕');
+    expect(events.at(-1)?.data).toEqual({ error: 'AGENT_FAILED' });
+  });
+
   it('모델이 없으면 채팅만 503으로 끈다', async () => {
     const app = await buildApp({ JWT_SECRET, DEMO_LOGIN: true }, db);
     apps.push(app);
