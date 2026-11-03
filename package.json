@@ -1,0 +1,32 @@
+{
+  "name": "dojang",
+  "version": "0.1.0",
+  "private": true,
+  "description": "결재를 받아야만 일할 수 있는 AI 신입사원",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:up": "docker compose up -d postgres",
+    "db:generate": "npm run generate -w @dojang/db",
+    "db:migrate": "npm run migrate -w @dojang/db",
+    "db:seed": "npm run seed -w @dojang/db",
+    "dev:api": "npm run dev -w @dojang/api",
+    "dev:mcp": "npm run dev -w @dojang/mcp-erp"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
