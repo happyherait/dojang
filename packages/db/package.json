@@ -1,0 +1,23 @@
+{
+  "name": "@dojang/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx --env-file=../../.env src/cli/migrate.ts",
+    "seed": "tsx --env-file=../../.env src/cli/seed.ts"
+  },
+  "dependencies": {
+    "@dojang/contracts": "*",
+    "@dojang/policy": "*",
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8"
+  },
+  "devDependencies": {
+    "@types/pg": "^8"
+  }
+}

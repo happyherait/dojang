@@ -1,0 +1,17 @@
+{
+  "name": "@dojang/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/main.ts"
+  },
+  "dependencies": {
+    "@dojang/contracts": "*",
+    "@dojang/db": "*",
+    "@fastify/jwt": "^10.2.7",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.8",
+    "zod": "^4.6.7"
+  }
+}
