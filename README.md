@@ -8,6 +8,8 @@
 
 **[데모 영상 보기](https://youtu.be/Gjr98nHXEyg)**: 정상 결재, 서버 재시작 후 재개, 숨은 지시가 든 PDF 공격 차단
 
+**[Q&A 보기](docs/qna.md)**: 설계 이유, 보안, 검증 방법, 한계
+
 ## 진행 상황
 
 | 주차 | 범위 | 상태 |
@@ -131,6 +133,7 @@ http://localhost:16686 에서 그래프 노드별 소요 시간과 토큰 사용
 - [ADR 1: LLM은 승인하지 않는다](docs/adr/0001-llm-never-approves.md)
 - [ADR 2: 결재 대기에 LangGraph.js를 사용한다](docs/adr/0002-langgraph-durable-pause.md)
 - [ADR 3: 업무 시스템을 MCP 서버로 분리한다](docs/adr/0003-erp-behind-mcp.md)
+- [Q&A](docs/qna.md)
 - [3분 데모 대본](docs/demo-script.md)
 
 ## 데모 영상 자동 녹화
