@@ -131,6 +131,17 @@ http://localhost:16686 에서 그래프 노드별 소요 시간과 토큰 사용
 - [ADR 3: 업무 시스템을 MCP 서버로 분리한다](docs/adr/0003-erp-behind-mcp.md)
 - [3분 데모 대본](docs/demo-script.md)
 
+## 데모 영상 자동 녹화
+
+실제 Claude로 정상 결재, 서버 재시작, PDF 공격 장면을 자막과 함께 녹화합니다. 먼저 켜 둔 서버를 끄고 Docker의 PostgreSQL만 실행해 둡니다. Windows에서는 설치된 Edge를 사용하며, `record:setup`은 영상 인코더를 내려받는 단계로 처음 한 번만 실행합니다.
+
+```powershell
+npm run record:setup
+npm run record
+```
+
+결과는 `recordings/dojang-demo.webm`에 저장됩니다. 실행 중 시연 데이터가 초기화되며 API 요금이 발생합니다.
+
 ## MCP Inspector로 확인
 
 ```bash

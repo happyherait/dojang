@@ -9,6 +9,7 @@ const ConfigSchema = z.object({
   MCP_URL: z.url().default('http://127.0.0.1:4100/mcp'),
   ANTHROPIC_API_KEY: z.preprocess(optional, z.string().min(1).optional()),
   ANTHROPIC_MODEL: z.string().min(1).default('claude-sonnet-5-5'),
+  ANTHROPIC_BASE_URL: z.preprocess(optional, z.url().optional()),
   DEMO_LOGIN: z
     .enum(['true', 'false'])
     .default('false')
