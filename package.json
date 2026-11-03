@@ -20,7 +20,8 @@
     "db:migrate": "npm run migrate -w @dojang/db",
     "db:seed": "npm run seed -w @dojang/db",
     "dev:api": "npm run dev -w @dojang/api",
-    "dev:mcp": "npm run dev -w @dojang/mcp-erp"
+    "dev:mcp": "npm run dev -w @dojang/mcp-erp",
+    "demo": "tsx scripts/demo.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

@@ -1,12 +1,9 @@
 import type { Principal } from '@dojang/contracts';
 import { invoices, vendors, type Db } from '@dojang/db';
+import { canAccessDepartment } from '@dojang/policy';
 import { and, eq, ilike } from 'drizzle-orm';
 
 type InvoiceRow = typeof invoices.$inferSelect;
-
-/** 재무 책임자와 대표는 전사 청구서를, 그 외에는 자기 부서 청구서만 볼 수 있다. */
-export const canAccessDepartment = (actor: Principal, department: string): boolean =>
-  actor.role === 'finance_manager' || actor.role === 'ceo' || actor.department === department;
 
 const presentInvoice = (invoice: InvoiceRow) => ({
   id: invoice.id,

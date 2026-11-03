@@ -10,17 +10,16 @@ import {
   type Db,
 } from '@dojang/db';
 import {
+  canAccessDepartment,
   computeApprovalRoute,
   hashProposal,
+  isBankAccountRecentlyChanged,
   normalizeBankAccount,
   verifyExecutionGrant,
   type DenialCode,
   type StepRecord,
 } from '@dojang/policy';
 import { eq, sql } from 'drizzle-orm';
-import { canAccessDepartment } from './erp.ts';
-
-const BANK_ACCOUNT_RISK_WINDOW_MS = 30 * 86_400_000;
 
 export type PaymentDenialCode =
   | DenialCode
@@ -106,15 +105,13 @@ export async function executePayment(
         throw new PaymentDenied('INVOICE_VENDOR_MISMATCH');
       }
 
-      const changedAt = vendor.bankAccountChangedAt?.getTime();
       const requiredRoute = computeApprovalRoute(
         {
           amountKrw: approved.amountKrw,
           requester: actor,
           payee: {
             isNewVendor: vendor.firstPaidAt === null,
-            bankAccountChanged:
-              changedAt !== undefined && now.getTime() - changedAt < BANK_ACCOUNT_RISK_WINDOW_MS,
+            bankAccountChanged: isBankAccountRecentlyChanged(vendor.bankAccountChangedAt, now),
           },
         },
         {

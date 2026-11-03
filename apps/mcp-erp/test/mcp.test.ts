@@ -3,6 +3,7 @@ import {
   approvals,
   approvalSteps,
   auditEvents,
+  chatThreads,
   connect,
   invoices,
   payments,
@@ -69,10 +70,12 @@ async function approvalFixture(options: {
   const approved = options.proposal ?? proposal;
   const status = options.status ?? 'approved';
   const decidedBy = options.decidedBy === undefined ? 'u-park' : options.decidedBy;
+  const [thread] = await db.insert(chatThreads).values({ ownerId: 'u-kim' }).returning();
   const [approval] = await db
     .insert(approvals)
     .values({
-      threadId: randomUUID(),
+      threadId: thread!.id,
+      proposalKey: randomUUID(),
       requesterId: 'u-kim',
       proposal: approved,
       proposalHash: hashProposal(approved),

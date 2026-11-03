@@ -81,11 +81,24 @@ export const approvalPolicies = pgTable(
   ],
 );
 
+export const chatThreads = pgTable('chat_threads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: text('owner_id')
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamptz('created_at').notNull().defaultNow(),
+});
+
 export const approvals = pgTable(
   'approvals',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    threadId: text('thread_id').notNull(),
+    threadId: uuid('thread_id')
+      .notNull()
+      .references(() => chatThreads.id),
+    /** 대화와 도구 호출 ID로 만든 값. 노드가 재실행되어도 결재가 중복되지 않는다. */
+    proposalKey: text('proposal_key').notNull().unique(),
+    reasons: jsonb('reasons').$type<string[]>().notNull().default([]),
     requesterId: text('requester_id')
       .notNull()
       .references(() => users.id),

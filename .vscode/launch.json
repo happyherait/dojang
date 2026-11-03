@@ -5,8 +5,8 @@
       "name": "API 서버",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "watch", "--env-file=.env", "apps/api/src/main.ts"],
+      "runtimeArgs": ["--env-file=.env", "--import", "tsx"],
+      "program": "${workspaceFolder}/apps/api/src/main.ts",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
@@ -15,8 +15,8 @@
       "name": "가상 ERP MCP 서버",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "watch", "--env-file=.env", "apps/mcp-erp/src/main.ts"],
+      "runtimeArgs": ["--env-file=.env", "--import", "tsx"],
+      "program": "${workspaceFolder}/apps/mcp-erp/src/main.ts",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
@@ -25,8 +25,8 @@
       "name": "현재 테스트 파일",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["vitest", "run", "${relativeFile}"],
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
@@ -35,7 +35,8 @@
   "compounds": [
     {
       "name": "전체 서버",
-      "configurations": ["API 서버", "가상 ERP MCP 서버"]
+      "configurations": ["가상 ERP MCP 서버", "API 서버"],
+      "stopAll": true
     }
   ]
 }
