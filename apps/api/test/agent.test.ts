@@ -310,6 +310,36 @@ describe('결재 흐름', () => {
     expect(thread.json().messages.at(-1).content).toBe('3,000,000원 지급을 완료했습니다.');
   });
 
+  it('결재 문서는 요청자와 결재선의 직급만 볼 수 있다', async () => {
+    const { app } = await startApi([callTool('propose_payment', { invoiceId: 'i-alpha-1', amountKrw: 3_000_000 })]);
+    const { approvalId } = await requestPayment(app);
+    const view = async (userId: string) =>
+      app.inject({ url: `/approvals/${approvalId}`, headers: await authOf(app, userId) });
+
+    expect((await view('u-kim')).json()).toMatchObject({ decidableStep: null, requesterName: '김사원' });
+    expect((await view('u-park')).json()).toMatchObject({ decidableStep: 1, invoiceNumber: 'A-2026-1101' });
+    expect((await view('u-lee')).statusCode).toBe(404);
+    expect((await view('u-han')).statusCode).toBe(404);
+  });
+
+  it('결재 문서에 승인과 지급 기록을 시간순으로 담는다', async () => {
+    const { app } = await startApi([callTool('propose_payment', { invoiceId: 'i-alpha-1', amountKrw: 3_000_000 })]);
+    const { approvalId, headers } = await requestPayment(app);
+    await decide(app, 'u-lee', approvalId, 'approve');
+    await decide(app, 'u-park', approvalId, 'approve');
+
+    const detail = (await app.inject({ url: `/approvals/${approvalId}`, headers })).json();
+    expect(detail.status).toBe('executed');
+    expect(detail.steps[0]).toMatchObject({ status: 'approved', decidedByName: '박팀장' });
+    expect(detail.timeline.map((event: { action: string }) => event.action)).toEqual([
+      'approval.requested',
+      'approval.decision_denied',
+      'approval.step_approved',
+      'payment.executed',
+    ]);
+    expect(detail.timeline[1]).toMatchObject({ actorName: '이팀장', code: 'WRONG_DEPARTMENT' });
+  });
+
   it('결재 대기 중인 대화에는 새 메시지를 받지 않는다', async () => {
     const { app } = await startApi([callTool('propose_payment', { invoiceId: 'i-alpha-1', amountKrw: 3_000_000 })]);
     const { threadId, headers } = await requestPayment(app);

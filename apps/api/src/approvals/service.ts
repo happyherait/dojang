@@ -222,6 +222,78 @@ export async function decideStep(
   });
 }
 
+/** 요청자와 결재선에 포함된 직급만 결재 문서를 볼 수 있다. */
+export async function getApprovalDetail(db: Db, actor: Principal, approvalId: string, now = new Date()) {
+  const [row] = await db
+    .select({ approval: approvals, requesterName: users.name })
+    .from(approvals)
+    .innerJoin(users, eq(users.id, approvals.requesterId))
+    .where(eq(approvals.id, approvalId));
+  if (!row) return null;
+  const { approval, requesterName } = row;
+
+  const steps = await db
+    .select()
+    .from(approvalSteps)
+    .where(eq(approvalSteps.approvalId, approvalId))
+    .orderBy(asc(approvalSteps.stepOrder));
+
+  const canView =
+    approval.requesterId === actor.id ||
+    steps.some(
+      (step) =>
+        step.requiredRole === actor.role &&
+        (step.department === null || step.department === actor.department),
+    );
+  if (!canView) return null;
+
+  const [vendor] = await db.select().from(vendors).where(eq(vendors.id, approval.proposal.vendorId));
+  const [invoice] = await db.select().from(invoices).where(eq(invoices.id, approval.proposal.invoiceId));
+  const people = await db.select({ id: users.id, name: users.name }).from(users);
+  const nameOf = (id: string | null) => people.find((person) => person.id === id)?.name ?? null;
+
+  const events = await db
+    .select()
+    .from(auditEvents)
+    .where(and(eq(auditEvents.subjectType, 'approval'), eq(auditEvents.subjectId, approvalId)))
+    .orderBy(asc(auditEvents.id));
+
+  const records = steps.map(toStepRecord);
+  const current = records.find((step) => step.status === 'pending');
+  const decidable =
+    current && canDecideStep({ actor, approval, steps: records, stepOrder: current.order, now }).ok;
+
+  return {
+    approvalId: approval.id,
+    status: approval.status,
+    requesterName,
+    vendorName: vendor?.name ?? approval.proposal.vendorId,
+    invoiceNumber: invoice?.invoiceNumber ?? approval.proposal.invoiceId,
+    proposal: approval.proposal,
+    reasons: approval.reasons,
+    createdAt: approval.createdAt.toISOString(),
+    expiresAt: approval.expiresAt.toISOString(),
+    decidableStep: decidable ? current.order : null,
+    steps: steps.map((step) => ({
+      order: step.stepOrder,
+      role: step.requiredRole,
+      department: step.department,
+      status: step.status,
+      decidedByName: nameOf(step.decidedBy),
+      decidedAt: step.decidedAt?.toISOString() ?? null,
+      comment: step.comment,
+    })),
+    timeline: events.map((event) => ({
+      id: event.id,
+      occurredAt: event.occurredAt.toISOString(),
+      actorType: event.actorType,
+      actorName: nameOf(event.actorId),
+      action: event.action,
+      code: typeof event.payload.code === 'string' ? event.payload.code : null,
+    })),
+  };
+}
+
 /** 유효 기간이 지난 대기 결재를 만료 처리한다. */
 export async function expireOverdue(db: Db, now = new Date()): Promise<void> {
   await db.transaction(async (tx) => {

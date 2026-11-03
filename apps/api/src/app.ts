@@ -17,7 +17,7 @@ import Fastify, {
 import { z } from 'zod';
 import { connectErp } from './agent/erp-client.ts';
 import { createAgentRuntime, type AgentRuntime } from './agent/runtime.ts';
-import { decideStep, listInbox } from './approvals/service.ts';
+import { decideStep, getApprovalDetail, listInbox } from './approvals/service.ts';
 import type { Config } from './config.ts';
 
 declare module 'fastify' {
@@ -29,6 +29,7 @@ declare module 'fastify' {
 const LoginBodySchema = z.object({ userId: z.string().min(1) });
 const MessageBodySchema = z.object({ content: z.string().trim().min(1).max(4000) });
 const ThreadParamsSchema = z.object({ threadId: z.uuid() });
+const ApprovalParamsSchema = z.object({ approvalId: z.uuid() });
 const StepParamsSchema = z.object({
   approvalId: z.uuid(),
   stepOrder: z.coerce.number().int().positive(),
@@ -206,6 +207,15 @@ export async function buildApp(
     const actor = await authenticate(request, reply);
     if (!actor) return reply;
     return listInbox(db, actor);
+  });
+
+  app.get('/approvals/:approvalId', async (request, reply) => {
+    const actor = await authenticate(request, reply);
+    if (!actor) return reply;
+    const params = ApprovalParamsSchema.safeParse(request.params);
+    if (!params.success) return reply.code(400).send({ error: 'INVALID_PARAMS' });
+    const detail = await getApprovalDetail(db, actor, params.data.approvalId);
+    return detail ?? reply.code(404).send({ error: 'APPROVAL_NOT_FOUND' });
   });
 
   app.post('/approvals/:approvalId/steps/:stepOrder/decision', async (request, reply) => {

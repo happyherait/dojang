@@ -15,5 +15,14 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["scripts", "apps/*/src", "apps/*/test", "packages/*/src", "packages/*/test", "vitest.config.ts"]
+  "include": [
+    "scripts",
+    "apps/api/src",
+    "apps/api/test",
+    "apps/mcp-erp/src",
+    "apps/mcp-erp/test",
+    "packages/*/src",
+    "packages/*/test",
+    "vitest.config.ts"
+  ]
 }
