@@ -8,7 +8,7 @@
 
 **[데모 영상 보기](https://youtu.be/Gjr98nHXEyg)**: 정상 결재, 서버 재시작 후 재개, 숨은 지시가 든 PDF 공격 차단
 
-**[Q&A 보기](docs/qna.md)**: 설계 이유, 보안, 검증 방법, 한계
+**[프로젝트 사이트](https://happyherait.github.io/dojang/)** · **[Q&A 보기](docs/qna.md)**: 설계 이유, 보안, 검증 방법, 한계
 
 ## 진행 상황
 
